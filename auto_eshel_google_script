@@ -1,0 +1,75 @@
+function eshel_export() {
+  // Get the original spreadsheet
+  const originalSheet = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // Copy the sheet values
+  var range = originalSheet.getRange("A1:L30");
+  var values = range.getValues();
+  
+  // Create a new sheet
+  let sheet = SpreadsheetApp.create("אשל של חודש " + originalSheet.getSheets()[0].getName(), 30, 15);
+
+  // Copy the original values to the new sheet
+  var add = sheet.getRange("A1:L30");
+  add.setValues(values);
+
+  // Duplicate the Eshel values
+  var range = sheet.getRange("L1:L30");
+  var values = range.getValues();
+  var add = sheet.getRange("N1:N30");
+  add.setValues(values);
+
+  // Delete the non-relevant rows
+  var rows = sheet.getDataRange();
+  var numRows = rows.getNumRows();
+  var values = rows.getValues();
+
+
+  var rowsDeleted = 0;
+  for (var i = 0; i <= numRows - 1; i++) {
+    var row = values[i];
+    if (row[11] == '0' || row[8] == 'משרד') { // This searches all cells in columns A (change to row[1] for columns B and so on) and deletes row if cell is empty or has value 'delete'.
+      sheet.deleteRow((parseInt(i)+1) - rowsDeleted);
+      rowsDeleted++;
+    }
+  }
+
+  sheet.deleteColumns(3, 8);
+  sheet.insertRowAfter(sheet.getDataRange().getNumRows());
+
+  // Sum the Eshel column and add the sum value to the bottom
+  var lastRow = sheet.getLastRow();
+  var range = sheet.getRange("C2:C" + lastRow);
+  var values = range.getValues();
+
+  var sum = 0;
+  for (var i = 0; i < values.length; i++) {
+    var cellValue = values[i][0];
+    if (typeof cellValue === 'number') {
+      sum += cellValue;
+    }
+  }
+
+  var sumCell = sheet.getRange("C" + (lastRow + 1));
+  sumCell.setValue(sum);
+
+  var wordCell = sheet.getRange("A" + (lastRow + 1));
+  wordCell.setValue("סך הכל");
+
+  // Aesthetic changes to the table
+  let headers = sheet.getRange('A1:C1');
+  let table = sheet.getDataRange();
+
+  headers.setFontWeight('bold');
+  headers.setBackground('#16c2f6');
+
+  table.setHorizontalAlignment('center');
+  table.setBorder(true, true, true, true, true, true);
+}
+
+
+
+function onOpen(){
+  let ui = SpreadsheetApp.getUi();
+  ui.createMenu("פונקציית עריכה").addItem("פורמט אשל",'eshel_export').addToUi();
+}
